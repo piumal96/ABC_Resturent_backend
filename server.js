@@ -1,39 +1,62 @@
 const express = require('express');
-const connectDB = require('./config/db'); 
+const connectDB = require('./config/db');  // Import the connectDB function
+const bcrypt = require('bcryptjs');
+const { MongoClient, ObjectId } = require('mongodb');
 
 const app = express();
 
 // Init Middleware
 app.use(express.json({ extended: false }));
 
-// Connect to database and auto-insert a document on server start
-const autoInsert = async () => {
-  const client = await connectDB(); // Connect to the database and get the client
+// API Route to Create a New User
+app.post('/api/users', async (req, res) => {
+  const { username, email, password, role } = req.body;
+  const client = await connectDB();  // Connect to the database and get the client
+
   if (!client) {
-    console.error('Failed to connect to database.');
-    return;
+    return res.status(500).json({ msg: 'Failed to connect to database.' });
   }
 
-  const db = client.db('123');
+  const db = client.db('abc-restaurant');
 
   try {
-    const documentToInsert = {
-      name: "Auto Inserted Item",
-      price: 15.99,
-      description: "This item was automatically inserted when the server started."
+    const existingUser = await db.collection('users').findOne({ email });
+
+    if (existingUser) {
+      return res.status(400).json({ msg: 'User already exists' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const userToInsert = {
+      username,
+      email,
+      password: hashedPassword,
+      role: role || 'Customer',
+      createdAt: new Date(),
     };
 
-    const result = await db.collection('your-collection-name').insertOne(documentToInsert); // Replace with your collection name
-    console.log('Auto Inserted Document:', result);
+    const userResult = await db.collection('users').insertOne(userToInsert);
+    console.log('New User Created:', userResult);
+
+    // Send back the created user object
+    res.status(201).json({
+      _id: userResult.insertedId,
+      username: userToInsert.username,
+      email: userToInsert.email,
+      role: userToInsert.role,
+      createdAt: userToInsert.createdAt
+    });
   } catch (err) {
-    console.error('Error during auto insert:', err.message);
+    console.error('Error creating user:', err.message);
+    res.status(500).json({ msg: 'Server error' });
   } finally {
     await client.close();  // Close the client connection after operations are complete
   }
-};
+});
 
-autoInsert(); // Automatically insert a document when the server starts
-
+// Default route
 app.get('/', (req, res) => res.status(404).send({ msg: 'Hello' }));
 
 const PORT = process.env.PORT || 3000;

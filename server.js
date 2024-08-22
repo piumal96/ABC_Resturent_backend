@@ -14,7 +14,7 @@ const autoInsert = async () => {
     return;
   }
 
-  const db = client.db('abc-restaurant');
+  const db = client.db('123');
 
   try {
     const documentToInsert = {

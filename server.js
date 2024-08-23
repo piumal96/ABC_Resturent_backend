@@ -1,58 +1,82 @@
 const express = require('express');
-const connectDB = require('./config/db');  // Import the connectDB function
 const bcrypt = require('bcryptjs');
-const { MongoClient, ObjectId } = require('mongodb');
+const mongoose = require('mongoose');
+const User = require('./models/User'); 
+const connectDB = require('./config/db');  
+
 
 const app = express();
 
 // Init Middleware
-app.use(express.json({ extended: false }));
+app.use(express.json());
+
+// Connect to MongoDB
+connectDB();
 
 // API Route to Create a New User
 app.post('/api/users', async (req, res) => {
   const { username, email, password, role } = req.body;
-  const client = await connectDB();  // Connect to the database and get the client
-
-  if (!client) {
-    return res.status(500).json({ msg: 'Failed to connect to database.' });
-  }
-
-  const db = client.db('abc-restaurant');
 
   try {
-    const existingUser = await db.collection('users').findOne({ email });
+    const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return res.status(400).json({ msg: 'User already exists' });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const userToInsert = {
+    const user = new User({
       username,
       email,
-      password: hashedPassword,
+      password, // This will be hashed by the pre-save hook in the User model
       role: role || 'Customer',
-      createdAt: new Date(),
-    };
+    });
 
-    const userResult = await db.collection('users').insertOne(userToInsert);
-    console.log('New User Created:', userResult);
+    await user.save();
 
     // Send back the created user object
     res.status(201).json({
-      _id: userResult.insertedId,
-      username: userToInsert.username,
-      email: userToInsert.email,
-      role: userToInsert.role,
-      createdAt: userToInsert.createdAt
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
     });
   } catch (err) {
     console.error('Error creating user:', err.message);
     res.status(500).json({ msg: 'Server error' });
-  } finally {
-    await client.close();  // Close the client connection after operations are complete
+  }
+});
+
+// API Route for User Login
+app.post('/api/auth', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Check if the user exists
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ msg: 'Invalid Credentials' });
+    }
+
+    // Check if the password matches
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ msg: 'Invalid Credentials' });
+    }
+
+    // If matched, send back the user object (without the password)
+    res.status(200).json({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+    });
+  } catch (err) {
+    console.error('Error during login:', err.message);
+    res.status(500).json({ msg: 'Server error' });
   }
 });
 

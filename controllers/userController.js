@@ -1,44 +1,89 @@
 const bcrypt = require('bcryptjs');
-const User = require('../models/User');
+const connectDB = require('../config/db');
+const UserModel = require('../models/userModel');
 
-// @desc Register a user
-exports.registerUser = async (req, res) => {
+exports.createUser = async (req, res) => {
   const { username, email, password, role } = req.body;
+  const client = await connectDB();
+
+  if (!client) {
+    return res.status(500).json({ msg: 'Failed to connect to database.' });
+  }
+
+  const db = client.db('abc-restaurant');
+  const userModel = new UserModel(db);
 
   try {
-    // Check if the user already exists
-    let user = await User.findOne({ email });
-    if (user) {
+    const existingUser = await userModel.findOne({ email });
+
+    if (existingUser) {
       return res.status(400).json({ msg: 'User already exists' });
     }
 
-    // Create a new user instance
-    user = new User({
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const userToInsert = {
       username,
       email,
-      password,
-      role: role || 'Customer',  // Default role is 'Customer' if not specified
-    });
+      password: hashedPassword,
+      role: role || 'Customer',
+      createdAt: new Date(),
+    };
 
-    // Hash the password before saving
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
+    const userResult = await userModel.insertOne(userToInsert);
+    console.log('New User Created:', userResult);
 
-    // Save the user to the database
-    await user.save();
-
-    // Return the created user
-    res.json({
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        created_at: user.created_at,
-      },
+    res.status(201).json({
+      _id: userResult.insertedId,
+      username: userToInsert.username,
+      email: userToInsert.email,
+      role: userToInsert.role,
+      createdAt: userToInsert.createdAt,
     });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error creating user:', err.message);
+    res.status(500).json({ msg: 'Server error' });
+  } finally {
+    await client.close();
+  }
+};
+
+exports.loginUser = async (req, res) => {
+  const { email, password } = req.body;
+  const client = await connectDB();
+
+  if (!client) {
+    return res.status(500).json({ msg: 'Failed to connect to database.' });
+  }
+
+  const db = client.db('abc-restaurant');
+  const userModel = new UserModel(db);
+
+  try {
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ msg: 'Invalid Credentials' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ msg: 'Invalid Credentials' });
+    }
+
+    res.status(200).json({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+    });
+  } catch (err) {
+    console.error('Error during login:', err.message);
+    res.status(500).json({ msg: 'Server error' });
+  } finally {
+    await client.close();
   }
 };

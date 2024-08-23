@@ -1,40 +1,30 @@
 const express = require('express');
-const connectDB = require('./config/db'); 
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
+const connectDB = require('./config/db');
 
 const app = express();
 
-// Init Middleware
-app.use(express.json({ extended: false }));
+// Connect to MongoDB
+connectDB();
 
-// Connect to database and auto-insert a document on server start
-const autoInsert = async () => {
-  const client = await connectDB(); // Connect to the database and get the client
-  if (!client) {
-    console.error('Failed to connect to database.');
-    return;
-  }
+// Middleware to parse JSON
+app.use(express.json());
 
-  const db = client.db('123');
+// Session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET,   // Replace with your generated secret
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,  // Make sure to use your MongoDB connection string
+  }),
+  cookie: { maxAge: 180 * 60 * 1000 }  // 3-hour session expiry
+}));
 
-  try {
-    const documentToInsert = {
-      name: "Auto Inserted Item",
-      price: 15.99,
-      description: "This item was automatically inserted when the server started."
-    };
-
-    const result = await db.collection('your-collection-name').insertOne(documentToInsert); // Replace with your collection name
-    console.log('Auto Inserted Document:', result);
-  } catch (err) {
-    console.error('Error during auto insert:', err.message);
-  } finally {
-    await client.close();  // Close the client connection after operations are complete
-  }
-};
-
-autoInsert(); // Automatically insert a document when the server starts
-
-app.get('/', (req, res) => res.status(404).send({ msg: 'Hello' }));
+// Define Routes
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/auth', require('./routes/authRoutes'));  // Add this line for auth routes
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));

@@ -6,6 +6,7 @@ exports.ensureAuthenticated = (req, res, next) => {
 };
 
 exports.ensureAdmin = (req, res, next) => {
+  console.log("Session data:", req.session); // Make sure this shows correct user data
   if (req.session && req.session.user && req.session.user.role === 'Admin') {
     return next();
   }

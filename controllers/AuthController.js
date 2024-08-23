@@ -1,10 +1,8 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
-
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
-
 
     try {
         // Check if the user exists
@@ -14,19 +12,21 @@ exports.loginUser = async (req, res) => {
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
-        // Debugging: Log the hashed password stored in the database
-        console.log('Stored hashed password:', user.password);
-
         // Compare the entered password with the stored hashed password
         const isMatch = await bcrypt.compare(password, user.password);
-        console.log('Password match:', isMatch);
-
         if (!isMatch) {
             console.log('Password does not match for user:', email);
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
-        // If credentials are valid, send the user data in the response
+        // If credentials are valid, store user data in the session
+        req.session.user = {
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            role: user.role,
+        };
+
         console.log('User logged in successfully:', user.username);
         res.status(200).json({
             _id: user._id,

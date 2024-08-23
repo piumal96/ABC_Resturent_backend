@@ -102,21 +102,20 @@ exports.updateUser = async (req, res) => {
 
 // Delete a user (Admin only)
 exports.deleteUser = async (req, res) => {
-  console.log('Deleting user:', req.params.id);
+  console.log('Attempting to delete user with ID:', req.params.id); // Logging the ID
   try {
     const user = await User.findById(req.params.id);
-
     if (!user) {
-      console.log('User not found:', req.params.id);
+      console.log('User not found:', req.params.id); // Logging if user is not found
       return res.status(404).json({ msg: 'User not found' });
     }
 
-    await user.remove();
-    console.log('User deleted:', req.params.id);
-
-    res.status(200).json({ msg: 'User deleted successfully' });
+    // Use deleteOne method instead of remove
+    await user.deleteOne();
+    console.log('User deleted successfully:', req.params.id); // Logging successful deletion
+    return res.status(200).json({ msg: 'User deleted successfully' });
   } catch (err) {
-    console.error('Error deleting user:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Error deleting user:', err.message, err.stack); // Detailed error logging
+    return res.status(500).json({ msg: 'Server error' });
   }
 };

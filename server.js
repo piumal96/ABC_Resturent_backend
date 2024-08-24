@@ -19,11 +19,19 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
-// Middleware to enable CORS
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
+
 app.use(cors({
-  origin: 'http://localhost:5173',  // Adjust to match your React app's URL
-  credentials: true  // This allows cookies to be sent with requests
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
 }));
+
 
 // Middleware to parse JSON
 app.use(express.json());

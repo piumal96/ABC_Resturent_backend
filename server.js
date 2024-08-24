@@ -2,12 +2,19 @@ const express = require('express');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const connectDB = require('./config/db');
-const restaurantRoutes = require('./routes/restaurant');
 
+const cors = require('cors');
+const restaurantRoutes = require('./routes/restaurant');
 const app = express();
 
 // Connect to MongoDB
 connectDB();
+
+// Middleware to enable CORS
+app.use(cors({
+  origin: 'http://localhost:5173',  // Adjust to match your React app's URL
+  credentials: true  // This allows cookies to be sent with requests
+}));
 
 // Middleware to parse JSON
 app.use(express.json());

@@ -5,6 +5,7 @@ const router = express.Router();
 const ServiceController = require('../controllers/serviceController');
 const { ensureAuthenticated, ensureAdmin } = require('../middlewares/roleMiddleware');
 
+
 // Public route - Get all services
 router.get('/', ServiceController.getAllServices);
 

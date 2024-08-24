@@ -1,26 +1,23 @@
+// routes/query.js
+
 const express = require('express');
 const router = express.Router();
-const queryController = require('../controllers/queryController');
-const auth = require('../middlewares/auth');
+const QueryController = require('../controllers/queryController');
+const { ensureAuthenticated, ensureAdmin, ensureStaffOrAdmin } = require('../middlewares/roleMiddleware');
 
-// @route   POST api/queries
-// @desc    Submit a query
-// @access  Private
-router.post('/', auth, queryController.submitQuery);
+// Customer route - Submit a New Query
+router.post('/', ensureAuthenticated, QueryController.submitQuery);
 
-// @route   GET api/queries
-// @desc    Get all queries (Admin/Staff)
-// @access  Private/Admin/Staff
-router.get('/', auth, queryController.getAllQueries);
+// Staff/Admin route - Get All Queries
+router.get('/', ensureAuthenticated, ensureStaffOrAdmin, QueryController.getAllQueries);
 
-// @route   PUT api/queries
-// @desc    Respond to a query (Admin/Staff)
-// @access  Private/Admin/Staff
-router.put('/', auth, queryController.respondToQuery);
+// Staff/Admin route - Get a Single Query by ID
+router.get('/:id', ensureAuthenticated, ensureStaffOrAdmin, QueryController.getQueryById);
 
-// @route   GET api/queries/user
-// @desc    Get user queries (Customer)
-// @access  Private
-router.get('/user', auth, queryController.getUserQueries);
+// Staff/Admin route - Respond to a Query
+router.put('/:id/respond', ensureAuthenticated, ensureStaffOrAdmin, QueryController.respondToQuery);
+
+// Admin route - Delete a Query
+router.delete('/:id', ensureAuthenticated, ensureAdmin, QueryController.deleteQuery);
 
 module.exports = router;

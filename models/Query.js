@@ -1,27 +1,42 @@
+// models/Query.js
+
 const mongoose = require('mongoose');
 
 const QuerySchema = new mongoose.Schema({
-  user_id: {
+  customer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
-  query: {
+  subject: {
     type: String,
     required: true,
+  },
+  message: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ['Pending', 'Resolved'],
+    default: 'Pending',
   },
   response: {
     type: String,
   },
-  status: {
-    type: String,
-    enum: ['Pending', 'Answered'],
-    default: 'Pending',
+  respondedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
   },
-  created_at: {
+  createdAt: {
     type: Date,
     default: Date.now,
   },
+  updatedAt: {
+    type: Date,
+  },
 });
 
-module.exports = mongoose.model('Query', QuerySchema);
+const Query = mongoose.model('Query', QuerySchema);
+
+module.exports = Query;

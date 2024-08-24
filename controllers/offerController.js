@@ -1,73 +1,89 @@
+// controllers/OfferController.js
+
 const Offer = require('../models/Offer');
 
-// @desc Add a new offer
-exports.addOffer = async (req, res) => {
-  const { title, description, valid_until, restaurant_id } = req.body;
+// Create a New Offer (Admin Only)
+exports.createOffer = async (req, res) => {
+  const { title, description, discountPercentage, validFrom, validTo } = req.body;
 
   try {
-    const newOffer = new Offer({
+    const offer = new Offer({
       title,
       description,
-      valid_until,
-      restaurant_id
+      discountPercentage,
+      validFrom,
+      validTo,
     });
 
-    await newOffer.save();
-    res.json(newOffer);
+    await offer.save();
+    res.status(201).json(offer);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error creating offer:', err.message);
+    res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// @desc Get all offers
+// Get All Offers
 exports.getAllOffers = async (req, res) => {
   try {
-    const offers = await Offer.find().populate('restaurant_id');
-    res.json(offers);
+    const offers = await Offer.find();
+    res.status(200).json(offers);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error fetching offers:', err.message);
+    res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// @desc Update an offer
+// Get a Single Offer by ID
+exports.getOfferById = async (req, res) => {
+  try {
+    const offer = await Offer.findById(req.params.id);
+    if (!offer) {
+      return res.status(404).json({ msg: 'Offer not found' });
+    }
+    res.status(200).json(offer);
+  } catch (err) {
+    console.error('Error fetching offer:', err.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// Update an Offer (Admin Only)
 exports.updateOffer = async (req, res) => {
-  const { offer_id, title, description, valid_until, restaurant_id } = req.body;
+  const { title, description, discountPercentage, validFrom, validTo } = req.body;
 
   try {
-    let offer = await Offer.findById(offer_id);
+    const offer = await Offer.findById(req.params.id);
     if (!offer) {
-      return res.status(400).json({ msg: 'Offer not found' });
+      return res.status(404).json({ msg: 'Offer not found' });
     }
 
-    offer.title = title || offer.title;
-    offer.description = description || offer.description;
-    offer.valid_until = valid_until || offer.valid_until;
-    offer.restaurant_id = restaurant_id || offer.restaurant_id;
+    if (title) offer.title = title;
+    if (description) offer.description = description;
+    if (discountPercentage) offer.discountPercentage = discountPercentage;
+    if (validFrom) offer.validFrom = validFrom;
+    if (validTo) offer.validTo = validTo;
 
     await offer.save();
-    res.json(offer);
+    res.status(200).json(offer);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error updating offer:', err.message);
+    res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// @desc Delete an offer
+// Delete an Offer (Admin Only)
 exports.deleteOffer = async (req, res) => {
-  const { offer_id } = req.body;
-
   try {
-    let offer = await Offer.findById(offer_id);
+    const offer = await Offer.findById(req.params.id);
     if (!offer) {
-      return res.status(400).json({ msg: 'Offer not found' });
+      return res.status(404).json({ msg: 'Offer not found' });
     }
 
-    await offer.remove();
-    res.json({ msg: 'Offer removed' });
+    await offer.deleteOne();
+    res.status(200).json({ msg: 'Offer deleted successfully' });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error deleting offer:', err.message);
+    res.status(500).json({ msg: 'Server error' });
   }
 };

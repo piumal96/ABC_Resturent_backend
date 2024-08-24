@@ -1,26 +1,23 @@
+// routes/offer.js
+
 const express = require('express');
 const router = express.Router();
-const offerController = require('../controllers/offerController');
-const auth = require('../middlewares/auth');
+const OfferController = require('../controllers/offerController');
+const { ensureAuthenticated, ensureAdmin } = require('../middlewares/roleMiddleware');
 
-// @route   POST api/offers
-// @desc    Add a new offer
-// @access  Private/Admin
-router.post('/', auth, offerController.addOffer);
+// Public route - Get All Offers
+router.get('/', OfferController.getAllOffers);
 
-// @route   GET api/offers
-// @desc    Get all offers
-// @access  Public
-router.get('/', offerController.getAllOffers);
+// Public route - Get a Single Offer by ID
+router.get('/:id', OfferController.getOfferById);
 
-// @route   PUT api/offers
-// @desc    Update an offer
-// @access  Private/Admin
-router.put('/', auth, offerController.updateOffer);
+// Admin route - Create a New Offer
+router.post('/', ensureAuthenticated, ensureAdmin, OfferController.createOffer);
 
-// @route   DELETE api/offers
-// @desc    Delete an offer
-// @access  Private/Admin
-router.delete('/', auth, offerController.deleteOffer);
+// Admin route - Update an Offer
+router.put('/:id', ensureAuthenticated, ensureAdmin, OfferController.updateOffer);
+
+// Admin route - Delete an Offer
+router.delete('/:id', ensureAuthenticated, ensureAdmin, OfferController.deleteOffer);
 
 module.exports = router;

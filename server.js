@@ -2,6 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const connectDB = require('./config/db');
+const restaurantRoutes = require('./routes/restaurant');
 
 const app = express();
 
@@ -25,6 +26,8 @@ app.use(session({
 // Define Routes
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));  // Add this line for auth routes
+
+app.use('/api/restaurants', restaurantRoutes);
 
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => console.log(`Server started on port ${PORT}`));

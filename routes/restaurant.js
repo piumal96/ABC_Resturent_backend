@@ -1,26 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const restaurantController = require('../controllers/restaurantController');
-const auth = require('../middlewares/auth');
+const { addRestaurant, getAllRestaurants, updateRestaurant, deleteRestaurant } = require('../controllers/restaurantController');
+const { ensureAdmin, ensureAuthenticated } = require('../middlewares/roleMiddleware');
 
-// @route   POST api/restaurants
+// @route   POST /api/restaurants
 // @desc    Add a new restaurant
-// @access  Private/Admin
-router.post('/', auth, restaurantController.addRestaurant);
+// @access  Admin
+router.post('/', ensureAdmin, addRestaurant);
 
-// @route   GET api/restaurants
+// @route   GET /api/restaurants
 // @desc    Get all restaurants
 // @access  Public
-router.get('/', restaurantController.getAllRestaurants);
+router.get('/', getAllRestaurants);
 
-// @route   PUT api/restaurants
+// @route   PUT /api/restaurants/:id
 // @desc    Update a restaurant
-// @access  Private/Admin
-router.put('/', auth, restaurantController.updateRestaurant);
+// @access  Admin
+router.put('/:id', ensureAdmin, updateRestaurant);
 
-// @route   DELETE api/restaurants
+// @route   DELETE /api/restaurants/:id
 // @desc    Delete a restaurant
-// @access  Private/Admin
-router.delete('/', auth, restaurantController.deleteRestaurant);
+// @access  Admin
+router.delete('/:id', ensureAdmin, deleteRestaurant);
 
 module.exports = router;

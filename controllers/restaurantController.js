@@ -1,8 +1,14 @@
 const Restaurant = require('../models/Restaurant');
 
 // @desc Add a new restaurant
+// @route POST /api/restaurants
+// @access Admin
 exports.addRestaurant = async (req, res) => {
   const { name, location, address, phone, description, facilities, images } = req.body;
+
+  if (!name || !location || !address || !phone) {
+    return res.status(400).json({ msg: 'Please provide all required fields' });
+  }
 
   try {
     const newRestaurant = new Restaurant({
@@ -16,7 +22,7 @@ exports.addRestaurant = async (req, res) => {
     });
 
     await newRestaurant.save();
-    res.json(newRestaurant);
+    res.status(201).json(newRestaurant);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
@@ -24,10 +30,12 @@ exports.addRestaurant = async (req, res) => {
 };
 
 // @desc Get all restaurants
+// @route GET /api/restaurants
+// @access Public
 exports.getAllRestaurants = async (req, res) => {
   try {
     const restaurants = await Restaurant.find();
-    res.json(restaurants);
+    res.status(200).json(restaurants);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
@@ -35,13 +43,15 @@ exports.getAllRestaurants = async (req, res) => {
 };
 
 // @desc Update restaurant details
+// @route PUT /api/restaurants/:id
+// @access Admin
 exports.updateRestaurant = async (req, res) => {
-  const { restaurant_id, name, location, address, phone, description, facilities, images } = req.body;
+  const { name, location, address, phone, description, facilities, images } = req.body;
 
   try {
-    let restaurant = await Restaurant.findById(restaurant_id);
+    let restaurant = await Restaurant.findById(req.params.id);
     if (!restaurant) {
-      return res.status(400).json({ msg: 'Restaurant not found' });
+      return res.status(404).json({ msg: 'Restaurant not found' });
     }
 
     restaurant.name = name || restaurant.name;
@@ -53,7 +63,7 @@ exports.updateRestaurant = async (req, res) => {
     restaurant.images = images || restaurant.images;
 
     await restaurant.save();
-    res.json(restaurant);
+    res.status(200).json(restaurant);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
@@ -61,17 +71,17 @@ exports.updateRestaurant = async (req, res) => {
 };
 
 // @desc Delete a restaurant
+// @route DELETE /api/restaurants/:id
+// @access Admin
 exports.deleteRestaurant = async (req, res) => {
-  const { restaurant_id } = req.body;
-
   try {
-    let restaurant = await Restaurant.findById(restaurant_id);
+    let restaurant = await Restaurant.findById(req.params.id);
     if (!restaurant) {
-      return res.status(400).json({ msg: 'Restaurant not found' });
+      return res.status(404).json({ msg: 'Restaurant not found' });
     }
 
-    await restaurant.remove();
-    res.json({ msg: 'Restaurant removed' });
+    await restaurant.deleteOne();
+    res.status(200).json({ msg: 'Restaurant removed' });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');

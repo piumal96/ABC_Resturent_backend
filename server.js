@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 const cors = require('cors');
 const restaurantRoutes = require('./routes/restaurant');
 const reservationRoutes = require('./routes/reservation');
+const serviceRoutes = require('./routes/service');
 const app = express();
 
 // Connect to MongoDB
@@ -38,6 +39,7 @@ app.use('/api/auth', require('./routes/authRoutes'));  // Add this line for auth
 
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/reservations', reservationRoutes); 
+app.use('/api/services', serviceRoutes);  
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 

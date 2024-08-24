@@ -1,75 +1,80 @@
+// controllers/ServiceController.js
+
 const Service = require('../models/Service');
 
-// @desc Add a new service
-exports.addService = async (req, res) => {
-  const { name, description, price, category, available_at } = req.body;
+// Create a new service
+exports.createService = async (req, res) => {
+  const { name, description, price } = req.body;
 
   try {
-    const newService = new Service({
-      name,
-      description,
-      price,
-      category,
-      available_at
-    });
-
-    await newService.save();
-    res.json(newService);
+    const service = new Service({ name, description, price });
+    await service.save();
+    res.status(201).json(service);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error creating service:', err.message);
+    res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// @desc Get all services
+// Get all services
 exports.getAllServices = async (req, res) => {
   try {
-    const services = await Service.find().populate('available_at');
-    res.json(services);
+    const services = await Service.find();
+    res.status(200).json(services);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error fetching services:', err.message);
+    res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// @desc Update a service
+// Get a single service by ID
+exports.getServiceById = async (req, res) => {
+  try {
+    const service = await Service.findById(req.params.id);
+    if (!service) {
+      return res.status(404).json({ msg: 'Service not found' });
+    }
+    res.status(200).json(service);
+  } catch (err) {
+    console.error('Error fetching service:', err.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// Update a service
 exports.updateService = async (req, res) => {
-  const { service_id, name, description, price, category, available_at } = req.body;
+  const { name, description, price } = req.body;
 
   try {
-    let service = await Service.findById(service_id);
+    const service = await Service.findById(req.params.id);
     if (!service) {
-      return res.status(400).json({ msg: 'Service not found' });
+      return res.status(404).json({ msg: 'Service not found' });
     }
 
     service.name = name || service.name;
     service.description = description || service.description;
     service.price = price || service.price;
-    service.category = category || service.category;
-    service.available_at = available_at || service.available_at;
 
     await service.save();
-    res.json(service);
+    res.status(200).json(service);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error updating service:', err.message);
+    res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// @desc Delete a service
+// Delete a service
 exports.deleteService = async (req, res) => {
-  const { service_id } = req.body;
-
   try {
-    let service = await Service.findById(service_id);
+    const service = await Service.findById(req.params.id);
     if (!service) {
-      return res.status(400).json({ msg: 'Service not found' });
+      return res.status(404).json({ msg: 'Service not found' });
     }
 
-    await service.remove();
-    res.json({ msg: 'Service removed' });
+    await service.deleteOne();
+    res.status(200).json({ msg: 'Service deleted successfully' });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error deleting service:', err.message);
+    res.status(500).json({ msg: 'Server error' });
   }
 };

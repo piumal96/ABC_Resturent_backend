@@ -1,5 +1,3 @@
-// controllers/OfferController.js
-
 const Offer = require('../models/Offer');
 
 // Create a New Offer (Admin Only)
@@ -16,10 +14,25 @@ exports.createOffer = async (req, res) => {
     });
 
     await offer.save();
-    res.status(201).json(offer);
+    res.status(201).json({
+      success: true,
+      message: 'Offer created successfully',
+      offer: {
+        id: offer._id,
+        title: offer.title,
+        description: offer.description,
+        discountPercentage: offer.discountPercentage,
+        validFrom: offer.validFrom,
+        validTo: offer.validTo,
+        createdAt: offer.createdAt,
+      }
+    });
   } catch (err) {
     console.error('Error creating offer:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -27,10 +40,17 @@ exports.createOffer = async (req, res) => {
 exports.getAllOffers = async (req, res) => {
   try {
     const offers = await Offer.find();
-    res.status(200).json(offers);
+    res.status(200).json({
+      success: true,
+      message: 'Offers fetched successfully',
+      offers,
+    });
   } catch (err) {
     console.error('Error fetching offers:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -39,12 +59,22 @@ exports.getOfferById = async (req, res) => {
   try {
     const offer = await Offer.findById(req.params.id);
     if (!offer) {
-      return res.status(404).json({ msg: 'Offer not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Offer not found',
+      });
     }
-    res.status(200).json(offer);
+    res.status(200).json({
+      success: true,
+      message: 'Offer fetched successfully',
+      offer,
+    });
   } catch (err) {
     console.error('Error fetching offer:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -55,7 +85,10 @@ exports.updateOffer = async (req, res) => {
   try {
     const offer = await Offer.findById(req.params.id);
     if (!offer) {
-      return res.status(404).json({ msg: 'Offer not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Offer not found',
+      });
     }
 
     if (title) offer.title = title;
@@ -65,10 +98,17 @@ exports.updateOffer = async (req, res) => {
     if (validTo) offer.validTo = validTo;
 
     await offer.save();
-    res.status(200).json(offer);
+    res.status(200).json({
+      success: true,
+      message: 'Offer updated successfully',
+      offer,
+    });
   } catch (err) {
     console.error('Error updating offer:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -77,13 +117,22 @@ exports.deleteOffer = async (req, res) => {
   try {
     const offer = await Offer.findById(req.params.id);
     if (!offer) {
-      return res.status(404).json({ msg: 'Offer not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Offer not found',
+      });
     }
 
     await offer.deleteOne();
-    res.status(200).json({ msg: 'Offer deleted successfully' });
+    res.status(200).json({
+      success: true,
+      message: 'Offer deleted successfully',
+    });
   } catch (err) {
     console.error('Error deleting offer:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };

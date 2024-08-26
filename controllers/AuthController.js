@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
+// Login User
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
 
@@ -11,7 +12,7 @@ exports.loginUser = async (req, res) => {
             console.log('No user found with this email:', email);
             return res.status(400).json({
                 success: false,
-                message: 'Invalid Credentials',
+                message: 'Invalid credentials',
             });
         }
 
@@ -21,7 +22,7 @@ exports.loginUser = async (req, res) => {
             console.log('Password does not match for user:', email);
             return res.status(400).json({
                 success: false,
-                message: 'Invalid Credentials',
+                message: 'Invalid credentials',
             });
         }
 
@@ -54,6 +55,8 @@ exports.loginUser = async (req, res) => {
         });
     }
 };
+
+// Logout User
 exports.logoutUser = (req, res) => {
     req.session.destroy(err => {
         if (err) {

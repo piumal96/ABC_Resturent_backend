@@ -6,8 +6,11 @@ const Restaurant = require('../models/Restaurant');
 exports.addRestaurant = async (req, res) => {
   const { name, location, address, phone, description, facilities, images } = req.body;
 
-  if (!name || !location || !address || !phone) {
-    return res.status(400).json({ msg: 'Please provide all required fields' });
+  if (!name, !location, !address, !phone) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide all required fields',
+    });
   }
 
   try {
@@ -18,14 +21,21 @@ exports.addRestaurant = async (req, res) => {
       phone,
       description,
       facilities,
-      images
+      images,
     });
 
     await newRestaurant.save();
-    res.status(201).json(newRestaurant);
+    res.status(201).json({
+      success: true,
+      message: 'Restaurant added successfully',
+      restaurant: newRestaurant,
+    });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error adding restaurant:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -35,10 +45,17 @@ exports.addRestaurant = async (req, res) => {
 exports.getAllRestaurants = async (req, res) => {
   try {
     const restaurants = await Restaurant.find();
-    res.status(200).json(restaurants);
+    res.status(200).json({
+      success: true,
+      message: 'Restaurants fetched successfully',
+      restaurants,
+    });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error fetching restaurants:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -51,7 +68,10 @@ exports.updateRestaurant = async (req, res) => {
   try {
     let restaurant = await Restaurant.findById(req.params.id);
     if (!restaurant) {
-      return res.status(404).json({ msg: 'Restaurant not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Restaurant not found',
+      });
     }
 
     restaurant.name = name || restaurant.name;
@@ -63,10 +83,17 @@ exports.updateRestaurant = async (req, res) => {
     restaurant.images = images || restaurant.images;
 
     await restaurant.save();
-    res.status(200).json(restaurant);
+    res.status(200).json({
+      success: true,
+      message: 'Restaurant updated successfully',
+      restaurant,
+    });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error updating restaurant:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -77,13 +104,22 @@ exports.deleteRestaurant = async (req, res) => {
   try {
     let restaurant = await Restaurant.findById(req.params.id);
     if (!restaurant) {
-      return res.status(404).json({ msg: 'Restaurant not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Restaurant not found',
+      });
     }
 
     await restaurant.deleteOne();
-    res.status(200).json({ msg: 'Restaurant removed' });
+    res.status(200).json({
+      success: true,
+      message: 'Restaurant removed successfully',
+    });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error deleting restaurant:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };

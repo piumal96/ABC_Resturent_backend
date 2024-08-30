@@ -1,17 +1,11 @@
-// routes/gallery.js
-
 const express = require('express');
 const router = express.Router();
-const GalleryController = require('../controllers/galleryController');
-const { ensureAuthenticated, ensureAdmin } = require('../middlewares/roleMiddleware');
+const galleryController = require('../controllers/galleryController');
 
-// Admin route - Upload a New Image
-router.post('/', ensureAuthenticated, ensureAdmin, GalleryController.uploadImage);
-
-// Public route - Get All Images
-router.get('/', GalleryController.getAllImages);
-
-// Admin route - Delete an Image
-router.delete('/:id', ensureAuthenticated, ensureAdmin, GalleryController.deleteImage);
+// Define the routes
+router.get('/images', galleryController.getAllImages);  // GET all images
+router.get('/images/:id', galleryController.getImage);  // GET a specific image
+router.post('/upload', galleryController.uploadImage);  // POST a new image
+router.delete('/images/:id', galleryController.deleteImage);  // DELETE a specific image
 
 module.exports = router;

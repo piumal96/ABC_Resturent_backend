@@ -1,8 +1,10 @@
 const express = require('express');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
-const connectDB = require('./config/db');
+const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
 
 // Import your route handlers
 const restaurantRoutes = require('./routes/restaurant');
@@ -12,14 +14,28 @@ const offerRoutes = require('./routes/offer');
 const queryRoutes = require('./routes/query');
 const reportRoutes = require('./routes/reports');
 const paymentRoutes = require('./routes/payment');
-const galleryRoutes = require('./routes/gallery');
+const galleryRoutes = require('./routes/gallery'); // New gallery routes
 const searchRoutes = require('./routes/search');
 
 // Initialize the Express application
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+(async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI); // Simplified connection without deprecated options
+    console.log('MongoDB connected successfully');
+
+    // Start the server
+    const PORT = process.env.PORT || 3000;
+    const server = app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+
+    module.exports = server; 
+  } catch (err) {
+    console.error('Failed to connect to MongoDB:', err);
+    process.exit(1); 
+  }
+})();
+
 
 // CORS configuration with allowed origins
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
@@ -29,7 +45,7 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'), false);
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true 
@@ -40,19 +56,19 @@ app.use(express.json());
 
 // Session middleware configuration with MongoDB store
 app.use(session({
-  secret: process.env.SESSION_SECRET, // Replace with your generated secret
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URI, // Make sure to use your MongoDB connection string
-    autoRemove: 'interval', // Optional, removes expired sessions
-    autoRemoveInterval: 10 // Removes expired sessions every 10 minutes
+    mongoUrl: process.env.MONGO_URI,
+    autoRemove: 'interval',
+    autoRemoveInterval: 10
   }),
   cookie: { 
-    maxAge: 180 * 60 * 1000, // 3-hour session expiry
-    httpOnly: true, // Protects against XSS attacks
-    secure: process.env.NODE_ENV === 'production', // Ensures cookies are sent only over HTTPS in production
-    sameSite: 'lax' // Helps with CSRF protection
+    maxAge: 180 * 60 * 1000, 
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
   }
 }));
 
@@ -75,11 +91,14 @@ app.use('/api/offers', offerRoutes);
 app.use('/api/queries', queryRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/gallery', galleryRoutes);
+app.use('/api/gallery', galleryRoutes); // New gallery routes
 app.use('/api/search', searchRoutes);
 
-// Start the server
-const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+// Serve static files from the "uploads" directory (if needed)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-module.exports = server;  // Export the server instance
+// Centralized Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error('Server Error:', err.message);
+  res.status(500).json({ success: false, message: 'Server Error' });
+});

@@ -1,5 +1,3 @@
-// controllers/ReservationController.js
-
 const Reservation = require('../models/Reservation');
 
 // Create a Reservation (Customer)
@@ -20,10 +18,29 @@ exports.createReservation = async (req, res) => {
     });
 
     await reservation.save();
-    res.status(201).json(reservation);
+    res.status(201).json({
+      success: true,
+      message: 'Reservation created successfully',
+      reservation: {
+        id: reservation._id,
+        customer: reservation.customer,
+        restaurant: reservation.restaurant,
+        service: reservation.service,
+        date: reservation.date,
+        time: reservation.time,
+        type: reservation.type,
+        deliveryAddress: reservation.deliveryAddress,
+        specialRequests: reservation.specialRequests,
+        status: reservation.status,
+        createdAt: reservation.createdAt,
+      }
+    });
   } catch (err) {
     console.error('Error creating reservation:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -34,10 +51,18 @@ exports.getAllReservations = async (req, res) => {
       .populate('customer')
       .populate('restaurant')
       .populate('service');
-    res.status(200).json(reservations);
+
+    res.status(200).json({
+      success: true,
+      message: 'Reservations fetched successfully',
+      reservations,
+    });
   } catch (err) {
     console.error('Error fetching reservations:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -49,10 +74,18 @@ exports.getReservationsByUser = async (req, res) => {
     const reservations = await Reservation.find({ customer: userId })
       .populate('restaurant')
       .populate('service');
-    res.status(200).json(reservations);
+
+    res.status(200).json({
+      success: true,
+      message: 'Reservations fetched successfully',
+      reservations,
+    });
   } catch (err) {
     console.error('Error fetching reservations by user:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -64,7 +97,10 @@ exports.updateReservation = async (req, res) => {
     const reservation = await Reservation.findById(req.params.id);
 
     if (!reservation) {
-      return res.status(404).json({ msg: 'Reservation not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Reservation not found',
+      });
     }
 
     // Check if the user is allowed to update the reservation
@@ -73,7 +109,10 @@ exports.updateReservation = async (req, res) => {
       req.session.user.role !== 'Staff' &&
       req.session.user._id !== reservation.customer.toString()
     ) {
-      return res.status(403).json({ msg: 'Forbidden' });
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden',
+      });
     }
 
     if (status) reservation.status = status;
@@ -84,10 +123,17 @@ exports.updateReservation = async (req, res) => {
     if (specialRequests) reservation.specialRequests = specialRequests;
 
     await reservation.save();
-    res.status(200).json(reservation);
+    res.status(200).json({
+      success: true,
+      message: 'Reservation updated successfully',
+      reservation,
+    });
   } catch (err) {
     console.error('Error updating reservation:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -97,7 +143,10 @@ exports.deleteReservation = async (req, res) => {
     const reservation = await Reservation.findById(req.params.id);
 
     if (!reservation) {
-      return res.status(404).json({ msg: 'Reservation not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Reservation not found',
+      });
     }
 
     // Check if the user is allowed to delete the reservation
@@ -106,13 +155,22 @@ exports.deleteReservation = async (req, res) => {
       req.session.user.role !== 'Staff' &&
       req.session.user._id !== reservation.customer.toString()
     ) {
-      return res.status(403).json({ msg: 'Forbidden' });
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden',
+      });
     }
 
     await reservation.deleteOne();
-    res.status(200).json({ msg: 'Reservation deleted successfully' });
+    res.status(200).json({
+      success: true,
+      message: 'Reservation deleted successfully',
+    });
   } catch (err) {
     console.error('Error deleting reservation:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };

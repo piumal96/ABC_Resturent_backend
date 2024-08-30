@@ -1,5 +1,3 @@
-// controllers/ReportsController.js
-
 const Reservation = require('../models/Reservation');
 const Payment = require('../models/Payment');
 const Query = require('../models/Query');
@@ -23,13 +21,18 @@ exports.getReservationReport = async (req, res) => {
     const count = await Reservation.countDocuments();
 
     res.status(200).json({
+      success: true,
+      message: 'Reservation report fetched successfully',
       reservations,
       totalPages: Math.ceil(count / limit),
       currentPage: page
     });
   } catch (err) {
     console.error('Error fetching reservation report:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -50,13 +53,18 @@ exports.getPaymentReport = async (req, res) => {
     const count = await Payment.countDocuments();
 
     res.status(200).json({
+      success: true,
+      message: 'Payment report fetched successfully',
       payments,
       totalPages: Math.ceil(count / limit),
       currentPage: page
     });
   } catch (err) {
     console.error('Error fetching payment report:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -77,13 +85,18 @@ exports.getQueryReport = async (req, res) => {
     const count = await Query.countDocuments();
 
     res.status(200).json({
+      success: true,
+      message: 'Query report fetched successfully',
       queries,
       totalPages: Math.ceil(count / limit),
       currentPage: page
     });
   } catch (err) {
     console.error('Error fetching query report:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -103,12 +116,17 @@ exports.getUserActivityReport = async (req, res) => {
     const count = await User.countDocuments();
 
     res.status(200).json({
+      success: true,
+      message: 'User activity report fetched successfully',
       users,
       totalPages: Math.ceil(count / limit),
       currentPage: page
     });
   } catch (err) {
     console.error('Error fetching user activity report:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };

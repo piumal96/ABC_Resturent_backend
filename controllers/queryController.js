@@ -1,5 +1,3 @@
-// controllers/QueryController.js
-
 const Query = require('../models/Query');
 
 // Submit a New Query (Customer)
@@ -15,10 +13,24 @@ exports.submitQuery = async (req, res) => {
     });
 
     await query.save();
-    res.status(201).json(query);
+    res.status(201).json({
+      success: true,
+      message: 'Query submitted successfully',
+      query: {
+        id: query._id,
+        customer: query.customer,
+        subject: query.subject,
+        message: query.message,
+        status: query.status,
+        createdAt: query.createdAt,
+      }
+    });
   } catch (err) {
     console.error('Error submitting query:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -28,10 +40,18 @@ exports.getAllQueries = async (req, res) => {
     const queries = await Query.find()
       .populate('customer', 'name email')
       .populate('respondedBy', 'name');
-    res.status(200).json(queries);
+
+    res.status(200).json({
+      success: true,
+      message: 'Queries fetched successfully',
+      queries,
+    });
   } catch (err) {
     console.error('Error fetching queries:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -42,12 +62,22 @@ exports.getQueryById = async (req, res) => {
       .populate('customer', 'name email')
       .populate('respondedBy', 'name');
     if (!query) {
-      return res.status(404).json({ msg: 'Query not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Query not found',
+      });
     }
-    res.status(200).json(query);
+    res.status(200).json({
+      success: true,
+      message: 'Query fetched successfully',
+      query,
+    });
   } catch (err) {
     console.error('Error fetching query:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -59,7 +89,10 @@ exports.respondToQuery = async (req, res) => {
   try {
     const query = await Query.findById(req.params.id);
     if (!query) {
-      return res.status(404).json({ msg: 'Query not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Query not found',
+      });
     }
 
     query.response = response;
@@ -68,10 +101,17 @@ exports.respondToQuery = async (req, res) => {
     query.updatedAt = Date.now();
 
     await query.save();
-    res.status(200).json(query);
+    res.status(200).json({
+      success: true,
+      message: 'Query responded to successfully',
+      query,
+    });
   } catch (err) {
     console.error('Error responding to query:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -80,13 +120,22 @@ exports.deleteQuery = async (req, res) => {
   try {
     const query = await Query.findById(req.params.id);
     if (!query) {
-      return res.status(404).json({ msg: 'Query not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Query not found',
+      });
     }
 
     await query.deleteOne();
-    res.status(200).json({ msg: 'Query deleted successfully' });
+    res.status(200).json({
+      success: true,
+      message: 'Query deleted successfully',
+    });
   } catch (err) {
     console.error('Error deleting query:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };

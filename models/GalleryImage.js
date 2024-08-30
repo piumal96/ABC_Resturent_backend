@@ -1,5 +1,3 @@
-// models/GalleryImage.js
-
 const mongoose = require('mongoose');
 
 const GalleryImageSchema = new mongoose.Schema({

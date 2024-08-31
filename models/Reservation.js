@@ -1,5 +1,3 @@
-// models/Reservation.js
-
 const mongoose = require('mongoose');
 const Service = require('./Service'); // Import the Service model
 
@@ -34,9 +32,13 @@ const ReservationSchema = new mongoose.Schema({
   },
   deliveryAddress: {
     type: String,
-    required: function () {
-      return this.type === 'Delivery';
-    },
+   
+    default: null,  // Default to null when not required
+  },
+  contactNumber: {
+    type: String,
+
+    default: null,  // Default to null when not required
   },
   status: {
     type: String,
@@ -50,6 +52,7 @@ const ReservationSchema = new mongoose.Schema({
   },
   specialRequests: {
     type: String,
+    default: '',  // Default to an empty string if no special requests are provided
   },
   createdAt: {
     type: Date,

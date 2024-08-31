@@ -28,6 +28,14 @@ exports.registerUser = async (req, res) => {
     await user.save();
     console.log('User created:', user);
 
+    // Store user data in the session after successful registration
+    req.session.user = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    };
+
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -38,6 +46,7 @@ exports.registerUser = async (req, res) => {
         role: user.role,
         createdAt: user.createdAt,
       },
+      sessionId: req.sessionID, // Include session ID in the response
     });
   } catch (err) {
     console.error('Error creating user:', err.message);

@@ -2,7 +2,7 @@ const Reservation = require('../models/Reservation');
 
 // Create a Reservation (Customer)
 exports.createReservation = async (req, res) => {
-  const { restaurant, service, date, time, type, deliveryAddress, specialRequests } = req.body;
+  const { restaurant, service, date, time, type, deliveryAddress, contactNumber, specialRequests } = req.body;
   const customerId = req.session.user._id;  // Use session data
 
   try {
@@ -14,7 +14,8 @@ exports.createReservation = async (req, res) => {
       time,
       type,
       deliveryAddress: type === 'Delivery' ? deliveryAddress : null, // Only set deliveryAddress if type is Delivery
-      specialRequests
+      contactNumber: type === 'Delivery' ? contactNumber : null, // Only set contactNumber if type is Delivery
+      specialRequests,
     });
 
     await reservation.save();
@@ -30,6 +31,7 @@ exports.createReservation = async (req, res) => {
         time: reservation.time,
         type: reservation.type,
         deliveryAddress: reservation.deliveryAddress,
+        contactNumber: reservation.contactNumber,
         specialRequests: reservation.specialRequests,
         status: reservation.status,
         createdAt: reservation.createdAt,
@@ -90,8 +92,9 @@ exports.getReservationsByUser = async (req, res) => {
 };
 
 // Update a Reservation (Customer/Staff)
+// Update a Reservation (Customer/Staff)
 exports.updateReservation = async (req, res) => {
-  const { status, date, time, type, deliveryAddress, specialRequests } = req.body;
+  const { status, date, time, type, deliveryAddress, contactNumber, specialRequests } = req.body;
 
   try {
     const reservation = await Reservation.findById(req.params.id);
@@ -115,11 +118,22 @@ exports.updateReservation = async (req, res) => {
       });
     }
 
+    // Update the reservation fields based on the request body
     if (status) reservation.status = status;
     if (date) reservation.date = date;
     if (time) reservation.time = time;
     if (type) reservation.type = type;
-    if (deliveryAddress && type === 'Delivery') reservation.deliveryAddress = deliveryAddress;
+
+    // Handle delivery-specific fields
+    if (type === 'Delivery') {
+      if (deliveryAddress) reservation.deliveryAddress = deliveryAddress;
+      if (contactNumber) reservation.contactNumber = contactNumber;
+    } else {
+      // Clear delivery-related fields if the type is not 'Delivery'
+      reservation.deliveryAddress = null;
+      reservation.contactNumber = null;
+    }
+
     if (specialRequests) reservation.specialRequests = specialRequests;
 
     await reservation.save();
@@ -136,6 +150,7 @@ exports.updateReservation = async (req, res) => {
     });
   }
 };
+
 
 // Delete a Reservation (Customer/Staff)
 exports.deleteReservation = async (req, res) => {

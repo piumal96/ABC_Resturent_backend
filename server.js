@@ -3,6 +3,7 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const connectDB = require('./config/db');
 const cors = require('cors');
+const path = require('path');
 
 // Import your route handlers
 const restaurantRoutes = require('./routes/restaurant');
@@ -14,8 +15,6 @@ const reportRoutes = require('./routes/reports');
 const paymentRoutes = require('./routes/payment');
 const galleryRoutes = require('./routes/gallery');
 const searchRoutes = require('./routes/search');
-const path = require('path');
-
 
 // Initialize the Express application
 const app = express();
@@ -82,8 +81,11 @@ app.use('/api/search', searchRoutes);
 // Serve static files from the 'uploads' directory
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Start the server
-const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
-
-module.exports = server;  // Export the server instance
+// Start the server only if this file is being executed directly
+if (!module.parent) {
+  const PORT = process.env.PORT || 3000;
+  const server = app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+  module.exports = server;  // Export the server instance
+} else {
+  console.log("Server not started as this module is being imported elsewhere.");
+}

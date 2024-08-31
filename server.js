@@ -1,10 +1,10 @@
 const express = require('express');
-const serverless = require('serverless-http');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const connectDB = require('./config/db');
 const cors = require('cors');
 const path = require('path');
+const serverless = require('serverless-http');
 
 // Import your route handlers
 const restaurantRoutes = require('./routes/restaurant');
@@ -83,5 +83,5 @@ app.use('/api/search', searchRoutes);
 // Serve static files from the 'uploads' directory
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Export the handler for serverless environments
+// Export the serverless handler
 module.exports.handler = serverless(app);

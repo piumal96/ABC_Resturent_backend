@@ -1,4 +1,5 @@
 const express = require('express');
+const serverless = require('serverless-http');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const connectDB = require('./config/db');
@@ -78,14 +79,9 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/search', searchRoutes);
+
 // Serve static files from the 'uploads' directory
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Start the server only if this file is being executed directly
-if (!module.parent) {
-  const PORT = process.env.PORT || 3000;
-  const server = app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
-  module.exports = server;  // Export the server instance
-} else {
-  console.log("Server not started as this module is being imported elsewhere.");
-}
+// Export the handler for serverless environments
+module.exports.handler = serverless(app);

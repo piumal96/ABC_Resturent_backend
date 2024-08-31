@@ -1,19 +1,22 @@
+// models/Reservation.js
+
 const mongoose = require('mongoose');
+const Service = require('./Service'); // Import the Service model
 
 const ReservationSchema = new mongoose.Schema({
-  user_id: {
+  customer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
-  restaurant_id: {
+  restaurant: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Restaurant',
     required: true,
   },
-  service_id: {
+  service: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Service',
+    ref: 'Service', // Reference the Service model
     required: true,
   },
   date: {
@@ -29,15 +32,31 @@ const ReservationSchema = new mongoose.Schema({
     enum: ['Dine-in', 'Delivery'],
     required: true,
   },
+  deliveryAddress: {
+    type: String,
+    required: function () {
+      return this.type === 'Delivery';
+    },
+  },
   status: {
     type: String,
-    enum: ['Pending', 'Confirmed', 'Cancelled'],
+    enum: ['Pending', 'Confirmed', 'Completed', 'Cancelled'],
     default: 'Pending',
   },
-  created_at: {
+  paymentStatus: {
+    type: String,
+    enum: ['Pending', 'Paid', 'Failed'],
+    default: 'Pending',
+  },
+  specialRequests: {
+    type: String,
+  },
+  createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-module.exports = mongoose.model('Reservation', ReservationSchema);
+const Reservation = mongoose.model('Reservation', ReservationSchema);
+
+module.exports = Reservation;

@@ -1,3 +1,5 @@
+// models/Service.js
+
 const mongoose = require('mongoose');
 
 const ServiceSchema = new mongoose.Schema({
@@ -12,13 +14,15 @@ const ServiceSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  category: {
-    type: String,
+  duration: {
+    type: Number, // Duration in minutes
   },
-  available_at: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Restaurant',
-  }],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-module.exports = mongoose.model('Service', ServiceSchema);
+const Service = mongoose.model('Service', ServiceSchema);
+
+module.exports = Service;

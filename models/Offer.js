@@ -1,3 +1,5 @@
+// models/Offer.js
+
 const mongoose = require('mongoose');
 
 const OfferSchema = new mongoose.Schema({
@@ -9,19 +11,24 @@ const OfferSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  valid_until: {
+  discountPercentage: {
+    type: Number,
+    required: true,
+  },
+  validFrom: {
     type: Date,
     required: true,
   },
-  restaurant_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Restaurant',
+  validTo: {
+    type: Date,
     required: true,
   },
-  created_at: {
+  createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-module.exports = mongoose.model('Offer', OfferSchema);
+const Offer = mongoose.model('Offer', OfferSchema);
+
+module.exports = Offer;

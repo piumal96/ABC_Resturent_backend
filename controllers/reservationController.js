@@ -1,84 +1,176 @@
 const Reservation = require('../models/Reservation');
-const User = require('../models/User');
-const Restaurant = require('../models/Restaurant');
 
-// @desc Create a reservation
+// Create a Reservation (Customer)
 exports.createReservation = async (req, res) => {
-  const { restaurant_id, service_id, date, time, type } = req.body;
+  const { restaurant, service, date, time, type, deliveryAddress, specialRequests } = req.body;
+  const customerId = req.session.user._id;  // Use session data
 
   try {
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(400).json({ msg: 'User not found' });
-    }
-
-    const restaurant = await Restaurant.findById(restaurant_id);
-    if (!restaurant) {
-      return res.status(400).json({ msg: 'Restaurant not found' });
-    }
-
     const reservation = new Reservation({
-      user_id: req.user.id,
-      restaurant_id,
-      service_id,
+      customer: customerId,
+      restaurant,
+      service,
       date,
       time,
-      type
+      type,
+      deliveryAddress: type === 'Delivery' ? deliveryAddress : null, // Only set deliveryAddress if type is Delivery
+      specialRequests
     });
 
     await reservation.save();
-    res.json({ reservation });
+    res.status(201).json({
+      success: true,
+      message: 'Reservation created successfully',
+      reservation: {
+        id: reservation._id,
+        customer: reservation.customer,
+        restaurant: reservation.restaurant,
+        service: reservation.service,
+        date: reservation.date,
+        time: reservation.time,
+        type: reservation.type,
+        deliveryAddress: reservation.deliveryAddress,
+        specialRequests: reservation.specialRequests,
+        status: reservation.status,
+        createdAt: reservation.createdAt,
+      }
+    });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error creating reservation:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
-// @desc Get all reservations for a user
-exports.getUserReservations = async (req, res) => {
+// Get All Reservations (Staff and Admin only)
+exports.getAllReservations = async (req, res) => {
   try {
-    const reservations = await Reservation.find({ user_id: req.user.id }).populate('restaurant_id service_id');
-    res.json(reservations);
+    const reservations = await Reservation.find()
+      .populate('customer')
+      .populate('restaurant')
+      .populate('service');
+
+    res.status(200).json({
+      success: true,
+      message: 'Reservations fetched successfully',
+      reservations,
+    });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error fetching reservations:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
-// @desc Update a reservation
+// Get Reservations by User (Customer)
+exports.getReservationsByUser = async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    const reservations = await Reservation.find({ customer: userId })
+      .populate('restaurant')
+      .populate('service');
+
+    res.status(200).json({
+      success: true,
+      message: 'Reservations fetched successfully',
+      reservations,
+    });
+  } catch (err) {
+    console.error('Error fetching reservations by user:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+};
+
+// Update a Reservation (Customer/Staff)
 exports.updateReservation = async (req, res) => {
-  const { reservation_id, status } = req.body;
+  const { status, date, time, type, deliveryAddress, specialRequests } = req.body;
 
   try {
-    let reservation = await Reservation.findById(reservation_id);
+    const reservation = await Reservation.findById(req.params.id);
+
     if (!reservation) {
-      return res.status(400).json({ msg: 'Reservation not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Reservation not found',
+      });
     }
 
-    reservation.status = status;
-    await reservation.save();
+    // Check if the user is allowed to update the reservation
+    if (
+      req.session.user.role !== 'Admin' &&
+      req.session.user.role !== 'Staff' &&
+      req.session.user._id !== reservation.customer.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden',
+      });
+    }
 
-    res.json(reservation);
+    if (status) reservation.status = status;
+    if (date) reservation.date = date;
+    if (time) reservation.time = time;
+    if (type) reservation.type = type;
+    if (deliveryAddress && type === 'Delivery') reservation.deliveryAddress = deliveryAddress;
+    if (specialRequests) reservation.specialRequests = specialRequests;
+
+    await reservation.save();
+    res.status(200).json({
+      success: true,
+      message: 'Reservation updated successfully',
+      reservation,
+    });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error updating reservation:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
-// @desc Delete a reservation
+// Delete a Reservation (Customer/Staff)
 exports.deleteReservation = async (req, res) => {
-  const { reservation_id } = req.body;
-
   try {
-    let reservation = await Reservation.findById(reservation_id);
+    const reservation = await Reservation.findById(req.params.id);
+
     if (!reservation) {
-      return res.status(400).json({ msg: 'Reservation not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Reservation not found',
+      });
     }
 
-    await reservation.remove();
-    res.json({ msg: 'Reservation removed' });
+    // Check if the user is allowed to delete the reservation
+    if (
+      req.session.user.role !== 'Admin' &&
+      req.session.user.role !== 'Staff' &&
+      req.session.user._id !== reservation.customer.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden',
+      });
+    }
+
+    await reservation.deleteOne();
+    res.status(200).json({
+      success: true,
+      message: 'Reservation deleted successfully',
+    });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Error deleting reservation:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };

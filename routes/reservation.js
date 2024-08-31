@@ -1,26 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const reservationController = require('../controllers/reservationController');
-const auth = require('../middlewares/auth');
+const ReservationController = require('../controllers/reservationController');
+const { ensureAuthenticated, ensureAdmin, ensureStaffOrAdmin } = require('../middlewares/roleMiddleware');
 
-// @route   POST api/reservations
-// @desc    Create a reservation
-// @access  Private
-router.post('/', auth, reservationController.createReservation);
+// Public route (Customer) - Create a Reservation
+router.post('/', ensureAuthenticated, ReservationController.createReservation);
 
-// @route   GET api/reservations
-// @desc    Get all reservations for a user
-// @access  Private
-router.get('/', auth, reservationController.getUserReservations);
+// Staff/Admin route - Get All Reservations
+router.get('/', ensureAuthenticated, ensureStaffOrAdmin, ReservationController.getAllReservations);
 
-// @route   PUT api/reservations
-// @desc    Update a reservation
-// @access  Private
-router.put('/', auth, reservationController.updateReservation);
+// Customer route - Get Reservations by User
+router.get('/user/:userId', ensureAuthenticated, ReservationController.getReservationsByUser);
 
-// @route   DELETE api/reservations
-// @desc    Delete a reservation
-// @access  Private
-router.delete('/', auth, reservationController.deleteReservation);
+// Customer/Staff route - Update a Reservation
+router.put('/:id', ensureAuthenticated, ReservationController.updateReservation);
+
+// Customer/Staff route - Delete a Reservation
+router.delete('/:id', ensureAuthenticated, ReservationController.deleteReservation);
 
 module.exports = router;

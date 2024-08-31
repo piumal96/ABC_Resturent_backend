@@ -1,31 +1,44 @@
 const request = require('supertest');
-const server = require('../server'); // Import the server, not just the app
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
+const server = require('../server'); // Import the server, not just the app
 
-// Connect to a test database before running tests
+let mongoServer;
+
 beforeAll(async () => {
-  const url = process.env.MONGO_URI;
-  await mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true });
+  mongoServer = await MongoMemoryServer.create();
+  const uri = mongoServer.getUri();
+
+  // Disconnect any existing connections to ensure we're only using the in-memory server
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
+
+  await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 });
 
-// Clean up the test database after each test
 afterEach(async () => {
+  // Clear the Users collection after each test
   await User.deleteMany({});
 });
 
-// Close the connection to the test database after all tests are done
 afterAll(async () => {
+  // Drop all collections, close the mongoose connection, and stop the in-memory server
+  const collections = mongoose.connection.collections;
+  for (const key in collections) {
+    const collection = collections[key];
+    await collection.deleteMany();  // Clear all documents in each collection
+  }
   await mongoose.connection.close();
-  await server.close();  // Ensure the server is closed after tests
+  await mongoServer.stop();
+  await server.close(); // Ensure the server is closed after tests
 });
 
 describe('UserController - User Registration, Update, and Deletion', () => {
-  
-  // Test for user registration
   it('should register a new user', async () => {
-    const res = await request(server)  // Use the server instance
+    const res = await request(server)
       .post('/api/users/register')
       .send({
         username: 'testuser',
@@ -61,7 +74,6 @@ describe('UserController - User Registration, Update, and Deletion', () => {
 
   // Test for updating a user by Admin
   it('should update a user when requested by an Admin', async () => {
-    // Create a user and an admin in the test database
     const admin = new User({
       username: 'admin',
       email: 'admin@example.com',
@@ -78,10 +90,8 @@ describe('UserController - User Registration, Update, and Deletion', () => {
     });
     await user.save();
 
-    // Create a session for the admin user
-    const agent = request.agent(server); // Use agent to maintain the session
+    const agent = request.agent(server);
 
-    // Log in as the admin
     await agent
       .post('/api/auth/login')
       .send({
@@ -89,7 +99,6 @@ describe('UserController - User Registration, Update, and Deletion', () => {
         password: 'adminpass'
       });
 
-    // Update the user
     const res = await agent
       .put(`/api/users/${user._id}`)
       .send({
@@ -97,7 +106,7 @@ describe('UserController - User Registration, Update, and Deletion', () => {
         email: 'updateduser@example.com',
         role: 'Customer'
       });
-    
+
     expect(res.statusCode).toBe(200);
     expect(res.body).toHaveProperty('username', 'updateduser');
     expect(res.body).toHaveProperty('email', 'updateduser@example.com');
@@ -105,7 +114,6 @@ describe('UserController - User Registration, Update, and Deletion', () => {
 
   // Test for deleting a user by Admin
   it('should delete a user when requested by an Admin', async () => {
-    // Create a user and an admin in the test database
     const admin = new User({
       username: 'admin',
       email: 'admin@example.com',
@@ -122,10 +130,8 @@ describe('UserController - User Registration, Update, and Deletion', () => {
     });
     await user.save();
 
-    // Create a session for the admin user
-    const agent = request.agent(server); // Use agent to maintain the session
+    const agent = request.agent(server);
 
-    // Log in as the admin
     await agent
       .post('/api/auth/login')
       .send({
@@ -133,10 +139,9 @@ describe('UserController - User Registration, Update, and Deletion', () => {
         password: 'adminpass'
       });
 
-    // Delete the user
     const res = await agent
       .delete(`/api/users/${user._id}`);
-    
+
     expect(res.statusCode).toBe(200);
     expect(res.body).toHaveProperty('msg', 'User deleted successfully');
   });
@@ -153,7 +158,6 @@ describe('UserController - User Registration, Update, and Deletion', () => {
 
     const agent = request.agent(server);
 
-    // Log in as the non-admin user
     await agent
       .post('/api/auth/login')
       .send({
@@ -169,7 +173,7 @@ describe('UserController - User Registration, Update, and Deletion', () => {
         role: 'Customer'
       });
 
-    expect(res.statusCode).toBe(403);  // Assuming you return a 403 status for unauthorized access
+    expect(res.statusCode).toBe(403);
     expect(res.body).toHaveProperty('msg', 'Forbidden, Admins only.');
   });
 
@@ -185,7 +189,6 @@ describe('UserController - User Registration, Update, and Deletion', () => {
 
     const agent = request.agent(server);
 
-    // Log in as the non-admin user
     await agent
       .post('/api/auth/login')
       .send({
@@ -196,7 +199,7 @@ describe('UserController - User Registration, Update, and Deletion', () => {
     const res = await agent
       .delete(`/api/users/${user._id}`);
 
-    expect(res.statusCode).toBe(403);  // Assuming you return a 403 status for unauthorized access
+    expect(res.statusCode).toBe(403);
     expect(res.body).toHaveProperty('msg', 'Forbidden, Admins only.');
   });
 });

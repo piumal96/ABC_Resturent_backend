@@ -1,7 +1,6 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
-
 // Register a new user (Admin, Staff, or Customer)
 exports.registerUser = async (req, res) => {
   const { username, email, password, role } = req.body;
@@ -11,14 +10,13 @@ exports.registerUser = async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       console.log('User already exists:', email);
-      return res.status(400).json({ msg: 'User already exists' });
+      return res.status(400).json({
+        success: false,
+        message: 'User already exists',
+      });
     }
 
-
-
-   
     const hashedPassword = await bcrypt.hash(password, 10);
-    
 
     const user = new User({
       username,
@@ -31,15 +29,22 @@ exports.registerUser = async (req, res) => {
     console.log('User created:', user);
 
     res.status(201).json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      createdAt: user.createdAt,
+      success: true,
+      message: 'User registered successfully',
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt,
+      },
     });
   } catch (err) {
     console.error('Error creating user:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -49,10 +54,17 @@ exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find();
     console.log('Users fetched:', users);
-    res.status(200).json(users);
+    res.status(200).json({
+      success: true,
+      message: 'Users fetched successfully',
+      users, // Returning the list of users
+    });
   } catch (err) {
     console.error('Error fetching users:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -63,13 +75,23 @@ exports.getUserById = async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) {
       console.log('User not found:', req.params.id);
-      return res.status(404).json({ msg: 'User not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
     }
     console.log('User found:', user);
-    res.status(200).json(user);
+    res.status(200).json({
+      success: true,
+      message: 'User fetched successfully',
+      user,
+    });
   } catch (err) {
     console.error('Error fetching user:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -83,7 +105,10 @@ exports.updateUser = async (req, res) => {
 
     if (!user) {
       console.log('User not found:', req.params.id);
-      return res.status(404).json({ msg: 'User not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
     }
 
     user.username = username || user.username;
@@ -93,10 +118,17 @@ exports.updateUser = async (req, res) => {
     await user.save();
     console.log('User updated:', user);
 
-    res.status(200).json(user);
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      user,
+    });
   } catch (err) {
     console.error('Error updating user:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
@@ -107,15 +139,23 @@ exports.deleteUser = async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) {
       console.log('User not found:', req.params.id); // Logging if user is not found
-      return res.status(404).json({ msg: 'User not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
     }
 
-    // Use deleteOne method instead of remove
     await user.deleteOne();
     console.log('User deleted successfully:', req.params.id); // Logging successful deletion
-    return res.status(200).json({ msg: 'User deleted successfully' });
+    return res.status(200).json({
+      success: true,
+      message: 'User deleted successfully',
+    });
   } catch (err) {
     console.error('Error deleting user:', err.message, err.stack); // Detailed error logging
-    return res.status(500).json({ msg: 'Server error' });
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };

@@ -12,3 +12,10 @@ exports.ensureAdmin = (req, res, next) => {
   }
   res.status(403).json({ msg: 'Forbidden, Admins only.' });
 };
+
+exports.ensureStaffOrAdmin = (req, res, next) => {
+  if (req.session && req.session.user && (req.session.user.role === 'Staff' || req.session.user.role === 'Admin')) {
+    return next();
+  }
+  res.status(403).json({ msg: 'Forbidden, Staff or Admins only.' });
+};

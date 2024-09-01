@@ -103,11 +103,14 @@ exports.getPaymentsByUser = async (req, res) => {
 };
 
 // Update a Payment Status (Admin Only)
+// Update a Payment Status (Admin Only)
 exports.updatePaymentStatus = async (req, res) => {
-  const { status } = req.body;
+  const { status } = req.body; // Get the status from the request body
 
   try {
+    // Find the payment by its ID
     const payment = await Payment.findById(req.params.id);
+    
     if (!payment) {
       return res.status(404).json({
         success: false,
@@ -115,14 +118,15 @@ exports.updatePaymentStatus = async (req, res) => {
       });
     }
 
+    // Update the payment status
     payment.status = status;
     await payment.save();
 
-    // If payment status is updated to 'Paid', update the reservation status as well
+    // If the payment is marked as 'Paid', update the corresponding reservation status
     if (status === 'Paid') {
       const updatedReservation = await Reservation.findByIdAndUpdate(
         payment.reservation,
-        { paymentStatus: 'Paid', status: 'Confirmed' }, 
+        { paymentStatus: 'Paid', status: 'Confirmed' },
         { new: true }
       );
 
@@ -158,6 +162,7 @@ exports.updatePaymentStatus = async (req, res) => {
     });
   }
 };
+
 
 // Delete a Payment (Admin Only)
 exports.deletePayment = async (req, res) => {

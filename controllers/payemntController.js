@@ -1,11 +1,13 @@
 const Payment = require('../models/Payment');
+const Reservation = require('../models/Reservation');
 
 // Create a Payment (Customer)
 exports.createPayment = async (req, res) => {
   const { reservation, amount } = req.body;
-  const customerId = req.session.user._id;  
+  const customerId = req.session.user._id;
 
   try {
+    // Create a new payment entry
     const payment = new Payment({
       customer: customerId,
       reservation,
@@ -14,9 +16,24 @@ exports.createPayment = async (req, res) => {
     });
 
     await payment.save();
+
+    // Update the reservation's paymentStatus and status
+    const updatedReservation = await Reservation.findByIdAndUpdate(
+      reservation,
+      { paymentStatus: 'Paid', status: 'Confirmed' },
+      { new: true }
+    );
+
+    if (!updatedReservation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Reservation not found',
+      });
+    }
+
     res.status(201).json({
       success: true,
-      message: 'Payment created successfully',
+      message: 'Payment created successfully and reservation confirmed',
       payment: {
         id: payment._id,
         customer: payment.customer,
@@ -24,7 +41,12 @@ exports.createPayment = async (req, res) => {
         amount: payment.amount,
         status: payment.status,
         paymentDate: payment.paymentDate,
-      }
+      },
+      reservation: {
+        id: updatedReservation._id,
+        status: updatedReservation.status,
+        paymentStatus: updatedReservation.paymentStatus,
+      },
     });
   } catch (err) {
     console.error('Error creating payment:', err.message);
@@ -96,11 +118,38 @@ exports.updatePaymentStatus = async (req, res) => {
     payment.status = status;
     await payment.save();
 
-    res.status(200).json({
-      success: true,
-      message: 'Payment status updated successfully',
-      payment,
-    });
+    // If payment status is updated to 'Paid', update the reservation status as well
+    if (status === 'Paid') {
+      const updatedReservation = await Reservation.findByIdAndUpdate(
+        payment.reservation,
+        { paymentStatus: 'Paid', status: 'Confirmed' }, 
+        { new: true }
+      );
+
+      if (!updatedReservation) {
+        return res.status(404).json({
+          success: false,
+          message: 'Reservation not found',
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Payment and reservation status updated successfully',
+        payment,
+        reservation: {
+          id: updatedReservation._id,
+          status: updatedReservation.status,
+          paymentStatus: updatedReservation.paymentStatus,
+        },
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        message: 'Payment status updated successfully',
+        payment,
+      });
+    }
   } catch (err) {
     console.error('Error updating payment status:', err.message);
     res.status(500).json({

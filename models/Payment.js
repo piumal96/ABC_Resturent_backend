@@ -1,5 +1,3 @@
-// models/Payment.js
-
 const mongoose = require('mongoose');
 
 const PaymentSchema = new mongoose.Schema({
@@ -11,16 +9,21 @@ const PaymentSchema = new mongoose.Schema({
   reservation: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Reservation',
-    required: true,
+    // Remove `required: true` to allow the payment to be created before linking to a reservation
   },
   amount: {
     type: Number,
     required: true,
+    default: 0,  // Set default amount to 0
   },
   status: {
     type: String,
     enum: ['Pending', 'Paid', 'Failed'],
     default: 'Pending',
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['credit-card', 'cash', 'online'],
   },
   paymentDate: {
     type: Date,

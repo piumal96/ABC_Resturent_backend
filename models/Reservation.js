@@ -1,5 +1,3 @@
-// models/Reservation.js
-
 const mongoose = require('mongoose');
 const Service = require('./Service'); // Import the Service model
 
@@ -47,6 +45,15 @@ const ReservationSchema = new mongoose.Schema({
     type: String,
     enum: ['Pending', 'Paid', 'Failed'],
     default: 'Pending',
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['credit-card', 'cash', 'online'], // Define possible payment methods
+    default: 'credit-card', // Set a default value if desired
+  },
+  payment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Payment', 
   },
   specialRequests: {
     type: String,

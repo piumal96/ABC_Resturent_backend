@@ -15,7 +15,7 @@ router.get('/', ensureAuthenticated, ensureAdmin, PaymentController.getAllPaymen
 router.get('/user/:userId', ensureAuthenticated, PaymentController.getPaymentsByUser);
 
 // Admin route - Update Payment Status
-router.put('/:id', ensureAuthenticated, ensureAdmin, PaymentController.updatePaymentStatus);
+router.put('/:id', ensureAuthenticated, PaymentController.updatePayment);
 
 // Admin route - Delete a Payment
 router.delete('/:id', ensureAuthenticated, ensureAdmin, PaymentController.deletePayment);

@@ -16,7 +16,7 @@ beforeAll(async () => {
     await mongoose.disconnect();
   }
 
-  await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+  await mongoose.connect(uri);
 });
 
 afterEach(async () => {
@@ -37,6 +37,7 @@ afterAll(async () => {
 });
 
 describe('UserController - User Registration, Update, and Deletion', () => {
+  // Test for registering a new user
   it('should register a new user', async () => {
     const res = await request(server)
       .post('/api/users/register')
@@ -47,7 +48,7 @@ describe('UserController - User Registration, Update, and Deletion', () => {
         role: 'Customer'
       });
     expect(res.statusCode).toBe(201);
-    expect(res.body).toHaveProperty('email', 'testuser@example.com');
+    expect(res.body.user).toHaveProperty('email', 'testuser@example.com');
   });
 
   // Test for duplicate user registration
@@ -69,7 +70,7 @@ describe('UserController - User Registration, Update, and Deletion', () => {
         role: 'Customer'
       });
     expect(res.statusCode).toBe(400);
-    expect(res.body).toHaveProperty('msg', 'User already exists');
+    expect(res.body).toHaveProperty('message', 'User already exists');  // Update to 'message'
   });
 
   // Test for updating a user by Admin
@@ -108,8 +109,8 @@ describe('UserController - User Registration, Update, and Deletion', () => {
       });
 
     expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty('username', 'updateduser');
-    expect(res.body).toHaveProperty('email', 'updateduser@example.com');
+    expect(res.body.user).toHaveProperty('username', 'updateduser');
+    expect(res.body.user).toHaveProperty('email', 'updateduser@example.com');
   });
 
   // Test for deleting a user by Admin
@@ -143,7 +144,7 @@ describe('UserController - User Registration, Update, and Deletion', () => {
       .delete(`/api/users/${user._id}`);
 
     expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty('msg', 'User deleted successfully');
+    expect(res.body).toHaveProperty('message', 'User deleted successfully');  // Update to 'message'
   });
 
   // Test for unauthorized user update attempt
@@ -174,7 +175,7 @@ describe('UserController - User Registration, Update, and Deletion', () => {
       });
 
     expect(res.statusCode).toBe(403);
-    expect(res.body).toHaveProperty('msg', 'Forbidden, Admins only.');
+    expect(res.body).toHaveProperty('msg', 'Forbidden, Admins only.');  // Update to 'message'
   });
 
   // Test for unauthorized user deletion attempt
@@ -200,6 +201,6 @@ describe('UserController - User Registration, Update, and Deletion', () => {
       .delete(`/api/users/${user._id}`);
 
     expect(res.statusCode).toBe(403);
-    expect(res.body).toHaveProperty('msg', 'Forbidden, Admins only.');
+    expect(res.body).toHaveProperty('msg', 'Forbidden, Admins only.');  // Update to 'message'
   });
 });

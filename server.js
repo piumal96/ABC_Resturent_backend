@@ -34,8 +34,11 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'), false);
     }
   },
-  credentials: true 
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'], 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
 }));
+
 
 // Middleware to parse JSON
 app.use(express.json());

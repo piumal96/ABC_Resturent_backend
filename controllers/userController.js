@@ -2,7 +2,7 @@ const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
 // Register a new user (Admin, Staff, or Customer)
-exports.registerUser = async (req, res) => {
+exports.registerUserAdmin = async (req, res) => {
   const { username, email, password, role } = req.body;
   console.log('Received registration request:', { username, email, role });
 
@@ -48,6 +48,61 @@ exports.registerUser = async (req, res) => {
   }
 };
 
+// Register a new user (Admin, Staff, or Customer)
+exports.registerUser = async (req, res) => {
+  const { username, email, password, role } = req.body;
+  console.log('Received registration request:', { username, email, role });
+
+  try {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+          console.log('User already exists:', email);
+          return res.status(400).json({
+              success: false,
+              message: 'User already exists',
+          });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const user = new User({
+          username,
+          email,
+          password: hashedPassword, // Store the hashed password
+          role: role || 'Customer',
+      });
+
+      await user.save();
+      console.log('User created:', user);
+
+      // Store user information in session after registration
+      req.session.user = {
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+      };
+
+      res.status(201).json({
+          success: true,
+          message: 'User registered successfully',
+          user: {
+              id: user._id,
+              username: user.username,
+              email: user.email,
+              role: user.role,
+              createdAt: user.createdAt,
+          },
+          sessionId: req.sessionID,  // Include session ID in the response
+      });
+  } catch (err) {
+      console.error('Error creating user:', err.message);
+      res.status(500).json({
+          success: false,
+          message: 'Server error',
+      });
+  }
+};
 // Get all users (Admin only)
 exports.getAllUsers = async (req, res) => {
   console.log('Fetching all users...');

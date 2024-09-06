@@ -4,6 +4,7 @@ const { ensureAuthenticated, ensureAdmin } = require('../middlewares/roleMiddlew
 const UserController = require('../controllers/userController');
 // Public route - Register a new user
 router.post('/register', UserController.registerUser);
+router.post('/admin/register',ensureAdmin, UserController.registerUserAdmin);
 
 // Admin routes - Only accessible by Admin
 router.get('/', ensureAdmin, UserController.getAllUsers);

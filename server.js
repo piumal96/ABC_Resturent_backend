@@ -14,7 +14,10 @@ const reportRoutes = require('./routes/reports');
 const paymentRoutes = require('./routes/payment');
 const galleryRoutes = require('./routes/gallery');
 const searchRoutes = require('./routes/search');
+const dishRoutes = require('./routes/dishRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 const path = require('path');
+const orderRoutes = require('./routes/orderRoutes');
 
 
 // Initialize the Express application
@@ -82,8 +85,11 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/dishes', dishRoutes);
 // Serve static files from the 'uploads' directory
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/cart', cartRoutes);
+app.use('/api', orderRoutes); 
 
 // Start the server
 const PORT = process.env.PORT || 3000;

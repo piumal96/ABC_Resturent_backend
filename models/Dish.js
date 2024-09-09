@@ -17,13 +17,6 @@ const DishSchema = new mongoose.Schema({
     enum: ['Starter', 'Main Course', 'Dessert', 'Drinks'],
     required: true,
   },
-  customizations: [
-    {
-      name: String,
-      options: [String],  
-      price: Number,  
-    }
-  ],
   imageUrl: {
     type: String,
   },

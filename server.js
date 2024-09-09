@@ -88,6 +88,7 @@ app.use('/api/search', searchRoutes);
 app.use('/api/dishes', dishRoutes);
 // Serve static files from the 'uploads' directory
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/uploads/dish', express.static(path.join(__dirname, 'uploads/dish')));
 app.use('/api/cart', cartRoutes);
 app.use('/api', orderRoutes); 
 

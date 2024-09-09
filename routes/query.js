@@ -15,7 +15,7 @@ router.get('/', ensureAuthenticated, ensureStaffOrAdmin, QueryController.getAllQ
 router.get('/:id', ensureAuthenticated, ensureStaffOrAdmin, QueryController.getQueryById);
 
 // Staff/Admin route - Respond to a Query
-router.put('/:id/respond', ensureAuthenticated, ensureStaffOrAdmin, QueryController.respondToQuery);
+router.post('/respond/:id/', ensureAuthenticated, ensureStaffOrAdmin, QueryController.respondToQuery);
 
 // Admin route - Delete a Query
 router.delete('/:id', ensureAuthenticated, ensureAdmin, QueryController.deleteQuery);

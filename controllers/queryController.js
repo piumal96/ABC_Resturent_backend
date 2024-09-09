@@ -1,4 +1,14 @@
+const nodemailer = require('nodemailer');
 const Query = require('../models/Query');
+
+// Set up Nodemailer transporter with the provided credentials
+const transporter = nodemailer.createTransport({
+  service: 'Gmail',
+  auth: {
+    user: 'abcicbtresturent@gmail.com',  
+    pass: 'wnfp aidf jqil rhjk'                    
+  }
+});
 
 // Submit a New Query (Customer)
 exports.submitQuery = async (req, res) => {
@@ -81,13 +91,14 @@ exports.getQueryById = async (req, res) => {
   }
 };
 
-// Respond to a Query (Staff/Admin)
+// Respond to a Query (Staff/Admin) - Updated to Send Email
 exports.respondToQuery = async (req, res) => {
   const { response } = req.body;
-  const staffId = req.session.user._id;  // Use session data
+  const staffId = req.session.user._id;  
+  const name = req.session.user.name;  
 
   try {
-    const query = await Query.findById(req.params.id);
+    const query = await Query.findById(req.params.id).populate('customer', 'name email'); 
     if (!query) {
       return res.status(404).json({
         success: false,
@@ -101,11 +112,33 @@ exports.respondToQuery = async (req, res) => {
     query.updatedAt = Date.now();
 
     await query.save();
-    res.status(200).json({
-      success: true,
-      message: 'Query responded to successfully',
-      query,
+
+
+    const mailOptions = {
+      from: 'abcicbtresturent@gmail.com', 
+      to: query.customer.email,          
+      subject: `Response to your query: ${query.subject}`,
+      text: `Dear ${name},\n\nWe have responded to your query:\n\n${response}\n\nThank you for contacting us.\n\nBest Regards,\n ABC Resturent`
+    };
+
+    // Send email to customer
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Error sending email to customer',
+        });
+      } else {
+        console.log('Email sent: ' + info.response);
+        res.status(200).json({
+          success: true,
+          message: 'Query responded to successfully and email sent to customer',
+          query,
+        });
+      }
     });
+
   } catch (err) {
     console.error('Error responding to query:', err.message);
     res.status(500).json({
